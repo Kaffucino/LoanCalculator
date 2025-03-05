@@ -1,10 +1,10 @@
-package com.example.LoadCalculator;
+package com.leanpay.loancalculator;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class LoadCalculatorApplicationTests {
+class LoanCalculatorApplicationTests {
 
 	@Test
 	void contextLoads() {
