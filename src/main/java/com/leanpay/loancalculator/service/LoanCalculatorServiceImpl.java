@@ -1,13 +1,15 @@
 package com.leanpay.loancalculator.service;
 
-import com.leanpay.loancalculator.dto.PaymentScheduleResponseDTO;
 import com.leanpay.loancalculator.dto.LoanResponseDTO;
+import com.leanpay.loancalculator.dto.PaymentScheduleResponseDTO;
 import com.leanpay.loancalculator.helper.LoanCalculatorHelper;
 import com.leanpay.loancalculator.mapper.PaymentScheduleMapper;
 import com.leanpay.loancalculator.model.Loan;
 import com.leanpay.loancalculator.model.PaymentSchedule;
 import com.leanpay.loancalculator.repository.LoanRepository;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,17 +29,21 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
     @Autowired
     private LoanCalculatorHelper loanCalculatorHelper;
 
+    private static final Logger logger = LoggerFactory.getLogger(LoanCalculatorServiceImpl.class);
+
     @Transactional
     public LoanResponseDTO calculateLoanPaymentPlan(BigDecimal loanAmount, BigDecimal annualInterest, int numberOfMonths)
     {
-        //Log
+        logger.info("Execution of {} has started.", LoanCalculatorServiceImpl.class.getName());
+
         LoanResponseDTO responseDTO = new LoanResponseDTO();
 
         Optional<Loan> optionalLoan = loanRepository.findByPrincipalAndInterestAndNumberOfMonths(loanAmount, annualInterest, numberOfMonths);
 
-
         if(optionalLoan.isPresent())
         {
+            logger.info("Loan entity for values loanAmount = {}, interestRate = {}, numberOfMonths = {} is present in database. Loan entity will be fethced.", loanAmount, annualInterest, numberOfMonths);
+
             Loan loan = optionalLoan.get();
            // loan.getPaymentSchedules().forEach(paymentSchedule -> paymentPlan.add(DTOMapper.mapToInstallmentDTO(paymentSchedule)));
             List<PaymentScheduleResponseDTO> list = loan.getPaymentSchedules().stream().map(paymentScheduleMapper::fromDomainToDTO).toList();
@@ -48,7 +54,9 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
         }
         else
         {
-             Loan loan = Loan.builder()
+            logger.info("Loan entity for values loanAmount = {}, interestRate = {}, numberOfMonths = {} is not present in database. Loan entity will be created.", loanAmount, annualInterest, numberOfMonths);
+
+            Loan loan = Loan.builder()
                      .principal(loanAmount)
                      .numberOfMonths(numberOfMonths)
                      .interest(annualInterest)
@@ -73,7 +81,6 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
                     principalAmount = totalBalance;
                     totalBalance = BigDecimal.ZERO;
                     monthlyPayment = principalAmount.add(interestAmount);
-                    //Information log
 
                 }else
                 {
@@ -83,7 +90,6 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
                 totalPayment = totalPayment.add(monthlyPayment);
                 totalInterest = totalInterest.add(interestAmount);
 
-                //TODO: prebaciti u mapper mozda (bilo bi lepo), this should be part of mapper
                 PaymentSchedule paymentSchedule = PaymentSchedule.builder()
                         .paymentMonth(i+1)
                         .paymentAmount(monthlyPayment)
@@ -110,7 +116,7 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
         responseDTO.setInterestRate(annualInterest);
         responseDTO.setMonthlyPayments(numberOfMonths);
 
-        return  responseDTO;
+        return responseDTO;
     }
 
 
