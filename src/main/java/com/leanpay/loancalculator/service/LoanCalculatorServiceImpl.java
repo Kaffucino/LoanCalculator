@@ -45,7 +45,6 @@ public class LoanCalculatorServiceImpl implements LoanCalculatorService {
             logger.info("Loan entity for values loanAmount = {}, interestRate = {}, numberOfMonths = {} is present in database. Loan entity will be fethced.", loanAmount, annualInterest, numberOfMonths);
 
             Loan loan = optionalLoan.get();
-           // loan.getPaymentSchedules().forEach(paymentSchedule -> paymentPlan.add(DTOMapper.mapToInstallmentDTO(paymentSchedule)));
             List<PaymentScheduleResponseDTO> list = loan.getPaymentSchedules().stream().map(paymentScheduleMapper::fromDomainToDTO).toList();
 
             responseDTO.setPaymentSchedules(list);
